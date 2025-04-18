@@ -1,0 +1,327 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "metadata": {
+        "_generator": {
+            "name": "bicep",
+            "version": "0.12.40.16777",
+            "templateHash": "16004123048193185147"
+        }
+    },
+    "parameters": {
+        "webAppName": {
+            "type": "string",
+            "minLength": 2,
+            "metadata": {
+                "description": "Base name of the resource such as web app name and app service plan "
+            }
+        },
+        "sku": {
+            "type": "string",
+            "defaultValue": "S1",
+            "metadata": {
+                "description": "The SKU of App Service Plan "
+            }
+        },
+        "linuxFxVersion": {
+            "type": "string",
+            "defaultValue": "php|7.4",
+            "metadata": {
+                "description": "The Runtime stack of current web app"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "authType": {
+            "allowedValues": [
+                "AzureAD",
+                "AzureADB2C"
+            ],
+            "type": "string",
+            "metadata": {
+                "description": "The type of authentication to use. Choose between AzureAD and AzureADB2C."
+            }
+        },
+        "clientId": {
+            "type": "string",
+            "metadata": {
+                "description": "The client ID of your app registration in Azure AD or Azure AD B2C."
+            }
+        },
+        "runtimeVersion": {
+            "type": "string",
+            "defaultValue": "~1",
+            "metadata": {
+                "description": "The version of the runtime to use for the web app."
+            }
+        },
+        "configFilePath": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The path to the configuration file for Azure AD B2C."
+            }
+        },
+        "allowedAudiences": {
+            "type": "array",
+            "defaultValue": [],
+            "metadata": {
+                "description": "The allowed audiences for the app registration."
+            }
+        },
+        "allowedApplications": {
+            "type": "array",
+            "defaultValue": [],
+            "metadata": {
+                "description": "The allowed applications for the app registration."
+            }
+        },
+        "fwdProxyconvention": {
+            "type": "string",
+            "allowedValues": [
+                "Standard",
+                "Custom",
+                "NoProxy"
+            ],
+            "defaultValue": "Standard",
+            "metadata": {
+                "description": "The convention to use for the forward proxy."
+            }
+        },
+        "customHostHeaderName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The custom host header name for the forward proxy."
+            }
+        },
+        "customProtoHeaderName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The custom proto header name for the forward proxy."
+            }
+        },
+        "requireHttps": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Whether to require HTTPS for the web app."
+            }
+        },
+        "convention": {
+            "type": "string",
+            "defaultValue": "FixedTime",
+            "allowedValues": [
+                "FixedTime",
+                "identityProviderDerived"
+            ],
+            "metadata": {
+                "description": "The convention used when determining the session cookie's expiration."
+            }
+        },
+        "timeToExpiration": {
+            "type": "string",
+            "defaultValue": "08:00:00",
+            "metadata": {
+                "description": "The time after the request is made when the session cookie should expire."
+            }
+        },
+        "preserveUrlFragmentsForLogins": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "true if the fragments from the request are preserved after the login request is made; otherwise, false."
+            }
+        },
+        "directory": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The directory in which the tokens will be stored."
+            }
+        },
+        "tokenRefreshExtensionHours": {
+            "type": "int",
+            "minValue": 2,
+            "maxValue": 10,
+            "defaultValue": 10,
+            "metadata": {
+                "description": "The number of hours after session token expiration that a session token can be used to call the token refresh API."
+            }
+        },
+        "logoutEndpoint": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The endpoint at which a logout request should be made."
+            }
+        },
+        "allowedExternalRedirectUrls": {
+            "type": "array",
+            "defaultValue": [],
+            "metadata": {
+                "description": "External URLs that can be redirected to as part of logging in or logging out of the app."
+            }
+        },
+        "nonceExpirationInterval": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The number of minutes after a nonce is issued that it expires."
+            }
+        },
+        "validateNonce": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "false if the nonce should not be validated while completing the login flow; otherwise, true"
+            }
+        },
+        "tokenStoreEnabled": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "true to durably store platform-specific security tokens that are obtained during login flows; otherwise, false."
+            }
+        },
+        "tenantId": {
+            "type": "string",
+            "defaultValue": "[subscription().tenantId]",
+            "metadata": {
+                "description": "The tenant ID of your Azure AD or Azure AD B2C tenant."
+            }
+        }
+    },
+    "variables": {
+        "webAppPortalName": "[format('{0}-webapp', parameters('webAppName'))]",
+        "appServicePlanName": "[format('AppServicePlan-{0}', parameters('webAppName'))]",
+        "authSettingsName": "[concat(parameters('appServiceName'), '/authsettingsV2')]",
+        "OpenIdIssuerUrl": "[concat(environment().authentication.loginEndpoint, '/', parameters('tenantId'), '/v2.0')]",
+        "azureADSettings": {
+            "enabled": "[if(equals(parameters('authType'), 'AzureAD'), true(), false())]",
+            "registration": {
+                "clientId": "[parameters('clientId')]",
+                "clientSecretSettingName": "MICROSOFT_PROVIDER_AUTHENTICATION_SECRET",
+                "openIdIssuer": "[variables('OpenIdIssuerUrl')]"
+            },
+            "login": {
+                "disableWWWAuthenticate": false
+            },
+            "validation": {
+                "allowedAudiences": "[parameters('allowedAudiences')]",
+                "allowedApplications": "[parameters('allowedApplications')]"
+            }
+        },
+        "customOpenIdConnectProviders": {
+            "AzureB2C": {
+                "enabled": "[if(equals(parameters('authType'), 'AzureADB2C'), true(), false())]",
+                "registration": {
+                    "clientId": "[parameters('clientId')]",
+                    "clientSecretSettingName": "AZURE_B2C_PROVIDER_AUTHENTICATION_SECRET",
+                    "openIdConnectConfiguration": {
+                        "issuer": "[variables('OpenIdIssuerUrl')]",
+                        "certificationUri": "[concat(variables('OpenIdIssuerUrl'), '/.well-known/openid-configuration/jwks')]",
+                        "authorizationEndpoint": "[concat(variables('OpenIdIssuerUrl'), '/oauth2/v2.0/authorize')]",
+                        "tokenEndpoint": "[concat(variables('OpenIdIssuerUrl'), '/oauth2/v2.0/token')]"
+                    }
+                },
+                "login": {
+                    "disableWWWAuthenticate": false
+                },
+                "validation": {
+                    "allowedAudiences": "[parameters('allowedAudiences')]",
+                    "allowedApplications": "[parameters('allowedApplications')]"
+                }
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2022-03-01",
+            "name": "[variables('appServicePlanName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('sku')]"
+            },
+            "kind": "linux",
+            "properties": {
+                "reserved": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-03-01",
+            "name": "[variables('webAppPortalName')]",
+            "location": "[parameters('location')]",
+            "kind": "app",
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                "siteConfig": {
+                    "linuxFxVersion": "[parameters('linuxFxVersion')]",
+                    "ftpsState": "FtpsOnly"
+                },
+                "httpsOnly": true,
+                "identityProviders": {
+                    "azureActiveDirectory": "[if(equals(parameters('authType'), 'AzureAD'), variables('azureADSettings'), json('null'))]",
+                    "customOpenIdConnectProviders": "[if(equals(parameters('authType'), 'AzureADB2C'), variables('customOpenIdConnectProviders'), json('null'))]"
+                },
+                "globalValidation": {
+                    "requireAuthentication": true,
+                    "unauthenticatedClientAction": "RedirectToLoginPage",
+                    "redirectToProvider": "[if(equals(parameters('authType'), 'AzureAD'), 'AzureActiveDirectory', 'azureADB2CSettings')]"
+                },
+                "httpSettings": {
+                    "requireHttps": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('requireHttps'), json('null'))]",
+                    "forwardProxy": {
+                        "convention": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('fwdProxyconvention'), json('null'))]",
+                        "customHostHeaderName": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('customHostHeaderName'), json('null'))]",
+                        "customProtoHeaderName": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('customProtoHeaderName'), json('null'))]"
+                    }
+                },
+                "login": {
+                    "preserveUrlFragmentsForLogins": "[parameters('preserveUrlFragmentsForLogins')]",
+                    "allowedExternalRedirectUrls": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('allowedExternalRedirectUrls'), json('null'))]",
+                    "nonce": {
+                        "nonceExpirationInterval": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('nonceExpirationInterval'), json('null'))]",
+                        "validateNonce": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('validateNonce'), json('null'))]"
+                    },
+                    "cookieExpiration": {
+                        "convention": "[parameters('convention')]",
+                        "timeToExpiration": "[parameters('timeToExpiration')]"
+                    },
+                    "routes": {
+                        "logoutEndpoint": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('logoutEndpoint'), json('null'))]"
+                    },
+                    "tokenStore": {
+                        "enabled": "[parameters('tokenStoreEnabled')]",
+                        "azureBlobStorage": {
+                            "sasUrlSettingName": "[if(equals(parameters('authType'), 'AzureADB2C'), 'AZURE_BLOB_STORAGE_SETTINGS', json('null'))]"
+                        },
+                        "fileSystem": {
+                            "directory": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('directory'), json('null'))]"
+                        },
+                        "tokenRefreshExtensionHours": "[parameters('tokenRefreshExtensionHours')]"
+                    }
+                },
+                "platform": {
+                    "enabled": true,
+                    "runtimeVersion": "[parameters('runtimeVersion')]",
+                    "configFilePath": "[if(equals(parameters('authType'), 'AzureADB2C'), parameters('configFilePath'), json('null'))]"
+                }
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ]
+        }
+    ]
+}

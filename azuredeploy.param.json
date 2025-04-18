@@ -1,0 +1,72 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webAppName": {
+            "value": "AuthAppService01"
+        },
+        "authType": {
+            "value": "AzureAD"
+        },
+        "clientId": {
+            "value": "7a39a8d7-3a00-49d5-82e6-81cb74698141"
+        },
+        "runtimeVersion": {
+            "value": "~1"
+        },
+        "configFilePath": {
+            "value": ""
+        },
+        "allowedAudiences": {
+            "value": []
+        },
+        "allowedApplications": {
+            "value": []
+        },
+        "fwdProxyconvention": {
+            "value": "Standard"
+        },
+        "customHostHeaderName": {
+            "value": ""
+        },
+        "customProtoHeaderName": {
+            "value": ""
+        },
+        "requireHttps": {
+            "value": true
+        },
+        "convention": {
+            "value": "FixedTime"
+        },
+        "timeToExpiration": {
+            "value": "08:00:00"
+        },
+        "preserveUrlFragmentsForLogins": {
+            "value": false
+        },
+        "directory": {
+            "value": ""
+        },
+        "tokenRefreshExtensionHours": {
+            "value": 10
+        },
+        "logoutEndpoint": {
+            "value": ""
+        },
+        "allowedExternalRedirectUrls": {
+            "value": []
+        },
+        "nonceExpirationInterval": {
+            "value": ""
+        },
+        "validateNonce": {
+            "value": false
+        },
+        "tokenStoreEnabled": {
+            "value": false
+        },
+        "tenantId": {
+            "value": "[subscription().tenantId]"
+        }
+    }
+}
